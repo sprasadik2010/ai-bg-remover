@@ -16,7 +16,7 @@ function App() {
     setLoading(true);
     try {
       const res = await removeBG(fg);
-      setResult("http://localhost:8000/" + res.output_url);
+      setResult("https://ai-bg-remover-tbyy.onrender.com/" + res.output_url);
     } catch (error) {
       alert("Error processing image. Please try again.");
     } finally {
@@ -30,7 +30,7 @@ function App() {
     setLoading(true);
     try {
       const res = await replaceBG(fg, bg);
-      setResult("http://localhost:8000/" + res.output_url);
+      setResult("https://ai-bg-remover-tbyy.onrender.com/" + res.output_url);
     } catch (error) {
       alert("Error processing image. Please try again.");
     } finally {

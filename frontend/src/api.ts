@@ -6,7 +6,7 @@ export async function removeBG(file: File): Promise<ApiResponse> {
   const formData = new FormData();
   formData.append("image", file);
 
-  const res = await fetch("http://localhost:8000/remove-bg/", {
+  const res = await fetch("https://ai-bg-remover-tbyy.onrender.com/remove-bg/", {
     method: "POST",
     body: formData,
   });
@@ -22,7 +22,7 @@ export async function replaceBG(
   formData.append("foreground", foreground);
   formData.append("background", background);
 
-  const res = await fetch("http://localhost:8000/replace-bg/", {
+  const res = await fetch("https://ai-bg-remover-tbyy.onrender.com/replace-bg/", {
     method: "POST",
     body: formData,
   });
