@@ -19,22 +19,28 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+@app.on_event("startup")
+async def startup_event():
+    # Test that rembg can load
+    try:
+        test_img = Image.new('RGBA', (10, 10), (255, 0, 0, 255))
+        remove(test_img)
+        print("✅ rembg loaded successfully")
+    except Exception as e:
+        print(f"❌ rembg failed to load: {e}")
 
 # -----------------------
 # 1️⃣ Remove Background
 # -----------------------
 @app.post("/remove-bg/")
 async def remove_background(image: UploadFile = File(...)):
-    img_bytes = await image.read()
-    img = Image.open(io.BytesIO(img_bytes))
-    result = remove(img).convert("RGBA")
-
-    # Convert result to bytes
-    img_byte_arr = io.BytesIO()
-    result.save(img_byte_arr, format='PNG')
-    img_byte_arr = img_byte_arr.getvalue()
-
-    return Response(content=img_byte_arr, media_type="image/png")
+    try:
+        img_bytes = await image.read()
+        img = Image.open(io.BytesIO(img_bytes))
+        result = remove(img).convert("RGBA")
+        # ... rest of code
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Processing failed: {str(e)}")
 
 # -----------------------
 # 2️⃣ Replace Background
