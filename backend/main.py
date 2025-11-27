@@ -4,6 +4,7 @@ from rembg import remove
 from PIL import Image
 import io
 import os
+import uvicorn
 
 app = FastAPI()
 
@@ -61,3 +62,8 @@ async def replace_background(
     final.save(output_path)
 
     return {"output_url": output_path}
+
+# Add this at the end to run the server
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 8000))
+    uvicorn.run(app, host="0.0.0.0", port=port)
