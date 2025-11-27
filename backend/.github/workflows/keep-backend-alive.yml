@@ -1,0 +1,38 @@
+name: Keep Hospital Backend Alive
+
+on:
+  schedule:
+    # Run every 14 minutes to stay under Render's 15-minute limit
+    - cron: '*/14 * * * *'
+  # Allow manual triggering for testing
+  workflow_dispatch:
+
+jobs:
+  ping-backend:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Hospital Backend
+        run: |
+          echo "🚀 Checking Hospital Management System Backend at $(date)"
+          
+          # ⚠️ REPLACE THIS WITH YOUR ACTUAL RENDER BACKEND URL ⚠️
+          BACKEND_URL="https://ai-bg-remover-tbyy.onrender.com/api/health"
+          
+          # Make the request with timeout
+          response=$(curl -s -w "\nHTTP_STATUS:%{http_code}" --max-time 30 "$BACKEND_URL")
+          
+          # Extract status code and body
+          status_code=$(echo "$response" | grep "HTTP_STATUS:" | cut -d':' -f2)
+          body=$(echo "$response" | grep -v "HTTP_STATUS:")
+          
+          echo "📡 Backend URL: $BACKEND_URL"
+          echo "📊 Status Code: $status_code"
+          echo "📄 Response: $body"
+          
+          if [ "$status_code" -eq 200 ]; then
+            echo "✅ Hospital backend is healthy and awake"
+          else
+            echo "❌ Health check failed with status: $status_code"
+            echo "💡 This might be normal during deployment"
+            exit 1
+          fi
