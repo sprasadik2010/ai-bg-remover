@@ -48,7 +48,7 @@ function App() {
     }
   };
 
-  const handleUploadAreaClick = (inputRef: React.RefObject<HTMLInputElement>) => {
+  const handleUploadAreaClick = (inputRef: React.RefObject<HTMLInputElement | null>) => {
     inputRef.current?.click();
   };
 
