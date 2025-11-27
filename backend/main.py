@@ -7,12 +7,18 @@ import uvicorn
 
 app = FastAPI()
 
+# Updated CORS configuration with specific origins
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[
+        "http://localhost:5173",
+        "https://ai-bg-remover-04yd.onrender.com"
+    ],
+    allow_credentials=True,
     allow_methods=["*"],
-    allow_headers=["*"]
+    allow_headers=["*"],
 )
+
 
 # -----------------------
 # 1️⃣ Remove Background
