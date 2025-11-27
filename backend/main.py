@@ -1,6 +1,5 @@
 from fastapi import FastAPI, UploadFile, File, Response, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from rembg import remove
 from PIL import Image
 import io
 import uvicorn
@@ -8,6 +7,15 @@ from datetime import datetime
 import os
 
 app = FastAPI()
+
+# Try to import rembg with fallback
+try:
+    from rembg import remove
+    REMBG_AVAILABLE = True
+    print("✅ rembg imported successfully")
+except ImportError as e:
+    REMBG_AVAILABLE = False
+    print(f"❌ rembg import failed: {e}")
 
 # Updated CORS configuration with specific origins
 app.add_middleware(
@@ -29,6 +37,13 @@ rembg_error = None
 async def startup_event():
     """Test rembg loading with minimal memory usage"""
     global rembg_loaded, rembg_error
+    
+    if not REMBG_AVAILABLE:
+        rembg_error = "rembg not available"
+        rembg_loaded = False
+        print("❌ rembg not available")
+        return
+        
     print("🚀 Starting up application...")
     
     try:
@@ -54,7 +69,10 @@ async def startup_event():
 async def remove_background(image: UploadFile = File(...)):
     # Check if rembg is loaded
     if not rembg_loaded:
-        raise HTTPException(status_code=503, detail=f"Service unavailable: {rembg_error}")
+        raise HTTPException(
+            status_code=503, 
+            detail=f"Background removal service unavailable: {rembg_error}"
+        )
     
     try:
         # 1. Strict file size limit for free tier
@@ -63,7 +81,10 @@ async def remove_background(image: UploadFile = File(...)):
         # Read and validate file size
         img_bytes = await image.read()
         if len(img_bytes) > MAX_FILE_SIZE:
-            raise HTTPException(status_code=400, detail=f"Image too large. Max size: {MAX_FILE_SIZE//1024//1024}MB")
+            raise HTTPException(
+                status_code=400, 
+                detail=f"Image too large. Max size: {MAX_FILE_SIZE//1024//1024}MB"
+            )
         
         # 2. Open and optimize image
         img = Image.open(io.BytesIO(img_bytes))
@@ -90,64 +111,7 @@ async def remove_background(image: UploadFile = File(...)):
         raise HTTPException(status_code=500, detail=f"Processing failed: {str(e)}")
 
 # -----------------------
-# 2️⃣ Replace Background (OPTIMIZED)
-# -----------------------
-@app.post("/replace-bg/")
-async def replace_background(
-    foreground: UploadFile = File(...),
-    background: UploadFile = File(...)
-):
-    # Check if rembg is loaded
-    if not rembg_loaded:
-        raise HTTPException(status_code=503, detail=f"Service unavailable: {rembg_error}")
-    
-    try:
-        MAX_FILE_SIZE = 2 * 1024 * 1024  # 2MB max per file
-        
-        # Read and validate foreground
-        fg_bytes = await foreground.read()
-        if len(fg_bytes) > MAX_FILE_SIZE:
-            raise HTTPException(status_code=400, detail="Foreground image too large")
-        
-        # Read and validate background  
-        bg_bytes = await background.read()
-        if len(bg_bytes) > MAX_FILE_SIZE:
-            raise HTTPException(status_code=400, detail="Background image too large")
-
-        # Process images with size limits
-        fg_img = Image.open(io.BytesIO(fg_bytes))
-        bg_img = Image.open(io.BytesIO(bg_bytes))
-        
-        # Resize both images to manageable size
-        max_dimension = 600  # Even smaller for two images
-        fg_img.thumbnail((max_dimension, max_dimension), Image.Resampling.LANCZOS)
-        bg_img.thumbnail((max_dimension, max_dimension), Image.Resampling.LANCZOS)
-        
-        # Remove bg from foreground
-        print("🔄 Removing background from foreground...")
-        fg_no_bg = remove(fg_img).convert("RGBA")
-
-        # Resize background to match foreground size
-        bg_img = bg_img.convert("RGBA")
-        bg_img = bg_img.resize(fg_no_bg.size)
-
-        # Merge both
-        final = Image.alpha_composite(bg_img, fg_no_bg)
-
-        # Convert result to bytes with optimization
-        img_byte_arr = io.BytesIO()
-        final.save(img_byte_arr, format='PNG', optimize=True)
-        img_byte_arr = img_byte_arr.getvalue()
-
-        return Response(content=img_byte_arr, media_type="image/png")
-        
-    except HTTPException:
-        raise
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Background replacement failed: {str(e)}")
-
-# -----------------------
-# 3️⃣ Simple Background Removal (FALLBACK - No AI)
+# 2️⃣ Simple Background Removal (FALLBACK - No AI)
 # -----------------------
 @app.post("/remove-bg-simple/")
 async def remove_background_simple(image: UploadFile = File(...)):
@@ -204,7 +168,6 @@ async def root():
         "status": "operational" if rembg_loaded else "degraded",
         "endpoints": [
             "/remove-bg",
-            "/replace-bg", 
             "/remove-bg-simple",
             "/api/health"
         ]
@@ -215,7 +178,6 @@ if __name__ == "__main__":
         app, 
         host="0.0.0.0", 
         port=8000,
-        # Optimize for low memory
         workers=1,  # Single worker to save memory
         log_level="info"
     )
