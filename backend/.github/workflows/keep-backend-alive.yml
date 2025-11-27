@@ -13,7 +13,7 @@ jobs:
     steps:
       - name: Ping Hospital Backend
         run: |
-          echo "🚀 Checking Hospital Management System Backend at $(date)"
+          echo "🚀 Checking AI BG Remove API Backend at $(date)"
           
           # ⚠️ REPLACE THIS WITH YOUR ACTUAL RENDER BACKEND URL ⚠️
           BACKEND_URL="https://ai-bg-remover-tbyy.onrender.com/api/health"
