@@ -15,8 +15,8 @@ function App() {
     if (!fg) return alert("Please upload a main image");
     setLoading(true);
     try {
-      const res = await removeBG(fg);
-      setResult("https://ai-bg-remover-tbyy.onrender.com/" + res.output_url);
+      const resultUrl = await removeBG(fg);
+      setResult(resultUrl);
     } catch (error) {
       alert("Error processing image. Please try again.");
     } finally {
@@ -29,8 +29,8 @@ function App() {
     if (!bg) return alert("Please upload background image");
     setLoading(true);
     try {
-      const res = await replaceBG(fg, bg);
-      setResult("https://ai-bg-remover-tbyy.onrender.com/" + res.output_url);
+      const resultUrl = await replaceBG(fg, bg);
+      setResult(resultUrl);
     } catch (error) {
       alert("Error processing image. Please try again.");
     } finally {
@@ -54,6 +54,18 @@ function App() {
     setResult(null);
     if (fgInputRef.current) fgInputRef.current.value = '';
     if (bgInputRef.current) bgInputRef.current.value = '';
+  };
+
+  // Download handler for the result
+  const downloadImage = () => {
+    if (result) {
+      const link = document.createElement('a');
+      link.href = result;
+      link.download = 'processed-image.png';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
   };
 
   return (
@@ -175,13 +187,12 @@ function App() {
             <div className="result-image-container">
               <img src={result} alt="Processed result" className="result-image" />
               <div className="result-actions">
-                <a 
-                  href={result} 
-                  download="processed-image.png"
+                <button 
+                  onClick={downloadImage}
                   className="btn btn-success"
                 >
                   Download Image
-                </a>
+                </button>
               </div>
             </div>
           </div>

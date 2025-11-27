@@ -1,9 +1,8 @@
-from fastapi import FastAPI, UploadFile, File
+from fastapi import FastAPI, UploadFile, File, Response
 from fastapi.middleware.cors import CORSMiddleware
 from rembg import remove
 from PIL import Image
 import io
-import os
 import uvicorn
 
 app = FastAPI()
@@ -15,11 +14,6 @@ app.add_middleware(
     allow_headers=["*"]
 )
 
-INPUT_DIR = "static/input"
-OUTPUT_DIR = "static/output"
-os.makedirs(INPUT_DIR, exist_ok=True)
-os.makedirs(OUTPUT_DIR, exist_ok=True)
-
 # -----------------------
 # 1️⃣ Remove Background
 # -----------------------
@@ -29,10 +23,12 @@ async def remove_background(image: UploadFile = File(...)):
     img = Image.open(io.BytesIO(img_bytes))
     result = remove(img).convert("RGBA")
 
-    output_path = f"{OUTPUT_DIR}/removed.png"
-    result.save(output_path)
-    return {"output_url": output_path}
+    # Convert result to bytes
+    img_byte_arr = io.BytesIO()
+    result.save(img_byte_arr, format='PNG')
+    img_byte_arr = img_byte_arr.getvalue()
 
+    return Response(content=img_byte_arr, media_type="image/png")
 
 # -----------------------
 # 2️⃣ Replace Background
@@ -58,12 +54,12 @@ async def replace_background(
     # Merge both
     final = Image.alpha_composite(bg_img, fg_no_bg)
 
-    output_path = f"{OUTPUT_DIR}/replaced.png"
-    final.save(output_path)
+    # Convert result to bytes
+    img_byte_arr = io.BytesIO()
+    final.save(img_byte_arr, format='PNG')
+    img_byte_arr = img_byte_arr.getvalue()
 
-    return {"output_url": output_path}
-
+    return Response(content=img_byte_arr, media_type="image/png")
 
 if __name__ == "__main__":
-    import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)

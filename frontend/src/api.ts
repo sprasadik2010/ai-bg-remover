@@ -1,31 +1,38 @@
-export interface ApiResponse {
-  output_url: string;
-}
+const API_BASE_URL = "https://ai-bg-remover-tbyy.onrender.com";
 
-export async function removeBG(file: File): Promise<ApiResponse> {
+export const removeBG = async (file: File): Promise<string> => {
   const formData = new FormData();
   formData.append("image", file);
 
-  const res = await fetch("https://ai-bg-remover-tbyy.onrender.com/remove-bg/", {
+  const response = await fetch(`${API_BASE_URL}/remove-bg/`, {
     method: "POST",
     body: formData,
   });
 
-  return res.json();
-}
+  if (!response.ok) {
+    throw new Error("Failed to remove background");
+  }
 
-export async function replaceBG(
-  foreground: File,
-  background: File
-): Promise<ApiResponse> {
+  // Convert the blob to a data URL
+  const blob = await response.blob();
+  return URL.createObjectURL(blob);
+};
+
+export const replaceBG = async (foreground: File, background: File): Promise<string> => {
   const formData = new FormData();
   formData.append("foreground", foreground);
   formData.append("background", background);
 
-  const res = await fetch("https://ai-bg-remover-tbyy.onrender.com/replace-bg/", {
+  const response = await fetch(`${API_BASE_URL}/replace-bg/`, {
     method: "POST",
     body: formData,
   });
 
-  return res.json();
-}
+  if (!response.ok) {
+    throw new Error("Failed to replace background");
+  }
+
+  // Convert the blob to a data URL
+  const blob = await response.blob();
+  return URL.createObjectURL(blob);
+};
