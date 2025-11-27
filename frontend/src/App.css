@@ -40,3 +40,13 @@
 .read-the-docs {
   color: #888;
 }
+
+/* Hide the file inputs */
+.file-input {
+  display: none;
+}
+
+/* Make upload areas clickable */
+.upload-area {
+  cursor: pointer;
+}

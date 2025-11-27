@@ -48,6 +48,20 @@ function App() {
     }
   };
 
+  const handleUploadAreaClick = (inputRef: React.RefObject<HTMLInputElement>) => {
+    inputRef.current?.click();
+  };
+
+  const handleFileInputChange = (e: React.ChangeEvent<HTMLInputElement>, type: 'fg' | 'bg') => {
+    const file = e.target.files?.[0] || null;
+    if (file && file.type.startsWith('image/')) {
+      if (type === 'fg') setFg(file);
+      if (type === 'bg') setBg(file);
+    }
+    // Reset the input value to allow selecting the same file again
+    e.target.value = '';
+  };
+
   const clearAll = () => {
     setFg(null);
     setBg(null);
@@ -56,7 +70,6 @@ function App() {
     if (bgInputRef.current) bgInputRef.current.value = '';
   };
 
-  // Download handler for the result
   const downloadImage = () => {
     if (result) {
       const link = document.createElement('a');
@@ -87,14 +100,14 @@ function App() {
               }}
               onDragLeave={() => setDragOver(false)}
               onDrop={(e) => handleFileDrop(e, 'fg')}
-              onClick={() => fgInputRef.current?.click()}
+              onClick={() => handleUploadAreaClick(fgInputRef)}
             >
               <input
                 ref={fgInputRef}
                 type="file"
                 accept="image/*"
-                onChange={(e) => setFg(e.target.files?.[0] || null)}
-                className="hidden-input"
+                onChange={(e) => handleFileInputChange(e, 'fg')}
+                className="file-input"
               />
               {fg ? (
                 <div className="file-info">
@@ -116,14 +129,14 @@ function App() {
               className={`upload-area ${bg ? 'has-file' : ''}`}
               onDragOver={(e) => e.preventDefault()}
               onDrop={(e) => handleFileDrop(e, 'bg')}
-              onClick={() => bgInputRef.current?.click()}
+              onClick={() => handleUploadAreaClick(bgInputRef)}
             >
               <input
                 ref={bgInputRef}
                 type="file"
                 accept="image/*"
-                onChange={(e) => setBg(e.target.files?.[0] || null)}
-                className="hidden-input"
+                onChange={(e) => handleFileInputChange(e, 'bg')}
+                className="file-input"
               />
               {bg ? (
                 <div className="file-info">
